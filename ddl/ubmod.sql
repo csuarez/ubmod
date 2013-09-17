@@ -179,6 +179,31 @@ CREATE TABLE `slurm_event` (
 ) ENGINE=MyISAM;
 
 --
+-- Storage events
+--
+
+DROP TABLE IF EXISTS `storage_event`;
+CREATE TABLE `storage_event` (
+  `storage_event_id`          bigint unsigned NOT NULL AUTO_INCREMENT,
+  `date_key`                  date NOT NULL,
+  `storage_id`                int unsigned NOT NULL,
+  `user`                      varchar(255) NOT NULL,
+  `group`                     varchar(255) NOT NULL,
+  `tags`                      varchar(255) NOT NULL default '[]',
+  `account`                   varchar(255) NOT NULL default 'Unknown',
+  `project`                   varchar(255) NOT NULL default 'Unknown',
+  `start_time`                datetime NOT NULL,
+  `end_time`                  datetime NOT NULL,
+  `inodes_used`               bigint unsigned NOT NULL,
+  `inodes_available`          bigint unsigned NOT NULL,
+  `inodes_quota`              bigint unsigned NOT NULL,
+  `space_used`                bigint unsigned NOT NULL,
+  `space_available`           bigint unsigned NOT NULL,
+  `space_quota`               bigint unsigned NOT NULL,
+  PRIMARY KEY (`event_id`)
+) ENGINE=MyISAM;
+
+--
 -- Generic events
 --
 
@@ -211,6 +236,8 @@ CREATE TABLE `event` (
   PRIMARY KEY (`event_id`),
   KEY `source` (`source_format`,`cluster`)
 ) ENGINE=MyISAM;
+
+
 
 --
 -- Time intervals
@@ -395,6 +422,25 @@ CREATE TABLE `fact_job` (
   KEY (`dim_user_id`,`dim_date_id`,`dim_group_id`)
 ) ENGINE=MyISAM;
 
+
+DROP TABLE IF EXISTS `fact_storage`;
+CREATE TABLE `fact_storage` (
+  `fact_storage_id`    int    unsigned NOT NULL AUTO_INCREMENT,
+  `dim_date_id`        int    unsigned NOT NULL,
+  `dim_user_id`        int    unsigned NOT NULL,
+  `dim_group_id`       int    unsigned NOT NULL,
+  `space_used`         bigint unsigned NOT NULL,
+  `space_available`    bigint unsigned NOT NULL,
+  `space_quota`        bigint unsigned NOT NULL,
+  `inodes_used`        bigint unsigned NOT NULL,
+  `inodes_available`   bigint unsigned NOT NULL,
+  `inodes_quota`       bigint unsigned NOT NULL,
+
+  PRIMARY KEY (`fact_storage_id`),
+  KEY (`dim_user_id`,`dim_date_id`,`dim_group_id`)
+) ENGINE=MyISAM;
+
+
 --
 -- Aggregates
 --
@@ -549,6 +595,41 @@ BEGIN
   JOIN `dim_tags`    ON `event`.`tags`     = `dim_tags`.`tags`
   JOIN `dim_cpus`    ON `event`.`cpus`     = `dim_cpus`.`cpu_count`;
 END//
+
+DROP PROCEDURE IF EXISTS UpdateStorageFacts//
+CREATE PROCEDURE UpdateStorageFacts()
+BEGIN
+  TRUNCATE `fact_storage`;
+
+  INSERT INTO `fact_storage` (
+  `dim_date_id`,
+  `dim_user_id`,
+  `dim_group_id`,
+     `inodes_used`,
+  `inodes_available`,
+  `inodes_quota`,
+  `space_used`,
+  `space_available`,
+  `space_quota`              
+  )
+  SELECT
+    `dim_date`.`dim_date_id`,
+    `dim_user`.`dim_user_id`,
+    `dim_group`.`dim_group_id`,
+    `storage_event`.`wallt`,
+    `storage_event`.`cput`,
+    `storage_event`.`mem`,
+    `storage_event`.`vmem`,
+    `storage_event`.`wait`,
+    `storage_event`.`exect`,
+    `storage_event`.`nodes`,
+    `storage_event`.`cpus`
+  FROM `event`
+  JOIN `dim_date`    ON `event`.`date_key` = `dim_date`.`date`
+  JOIN `dim_user`    ON `event`.`user`     = `dim_user`.`name`
+  JOIN `dim_group`   ON `event`.`group`    = `dim_group`.`name`;
+END//
+
 
 --
 -- Aggregates
