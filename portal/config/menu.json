@@ -52,6 +52,13 @@
         "controller": "about",
         "action": "index",
         "resource": "about"
+    },
+    {
+        "name": "Storage",
+        "controller": "storage",
+        "action": "index",
+        "resource": "storage"
     }
+
 ]
 

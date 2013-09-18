@@ -200,7 +200,7 @@ CREATE TABLE `storage_event` (
   `space_used`                bigint unsigned NOT NULL,
   `space_available`           bigint unsigned NOT NULL,
   `space_quota`               bigint unsigned NOT NULL,
-  PRIMARY KEY (`event_id`)
+  PRIMARY KEY (`storage_event_id`)
 ) ENGINE=MyISAM;
 
 --
@@ -429,6 +429,7 @@ CREATE TABLE `fact_storage` (
   `dim_date_id`        int    unsigned NOT NULL,
   `dim_user_id`        int    unsigned NOT NULL,
   `dim_group_id`       int    unsigned NOT NULL,
+  `dim_tags_id`        int    unsigned NOT NULL,
   `space_used`         bigint unsigned NOT NULL,
   `space_available`    bigint unsigned NOT NULL,
   `space_quota`        bigint unsigned NOT NULL,
@@ -437,13 +438,14 @@ CREATE TABLE `fact_storage` (
   `inodes_quota`       bigint unsigned NOT NULL,
 
   PRIMARY KEY (`fact_storage_id`),
-  KEY (`dim_user_id`,`dim_date_id`,`dim_group_id`)
+  KEY (`dim_user_id`,`dim_date_id`,`dim_group_id`, `dim_tags_id`)
 ) ENGINE=MyISAM;
 
 
 --
 -- Aggregates
 --
+
 
 DROP TABLE IF EXISTS `agg_job_by_all`;
 CREATE TABLE `agg_job_by_all` (
@@ -503,6 +505,54 @@ CREATE TABLE `agg_job_by_timespan` (
   KEY (`dim_timespan_id`,`dim_cluster_id`,`dim_queue_id`,`dim_user_id`,`dim_group_id`,`dim_tags_id`,`dim_cpus_id`)
 ) ENGINE=MyISAM;
 
+
+DROP TABLE IF EXISTS `agg_storage_by_all`;
+CREATE TABLE `agg_storage_by_all` (
+  `agg_storage_by_all_id`  int    unsigned NOT NULL AUTO_INCREMENT,
+  `dim_date_id`        	   int    unsigned NOT NULL,
+  `dim_user_id`            int    unsigned NOT NULL,
+  `dim_group_id`           int    unsigned NOT NULL,
+  `dim_tags_id`            int    unsigned NOT NULL,
+  `fact_storage_count`     int    unsigned NOT NULL,
+  `space_used_sum`         bigint unsigned NOT NULL,
+  `space_used_max`         bigint unsigned NOT NULL,
+  `space_available_sum`    bigint unsigned NOT NULL,
+  `space_available_max`    bigint unsigned NOT NULL,
+  `space_quota_sum`        bigint unsigned NOT NULL,
+  `space_quota_max`        bigint unsigned NOT NULL,
+  `inodes_used_sum`        bigint unsigned NOT NULL,
+  `inodes_used_max`        bigint unsigned NOT NULL,
+  `inodes_available_sum`   bigint unsigned NOT NULL,
+  `inodes_available_max`   bigint unsigned NOT NULL,
+  `inodes_quota_sum`       bigint unsigned NOT NULL,
+  `inodes_quota_max`       bigint unsigned NOT NULL,
+  PRIMARY KEY (`agg_storage_by_all_id`),
+  KEY (`dim_date_id`,`dim_user_id`,`dim_group_id`,`dim_tags_id`)
+) ENGINE=MyISAM;
+
+DROP TABLE IF EXISTS `agg_storage_by_timespan`;
+CREATE TABLE `agg_storage_by_timespan` (
+  `agg_storage_by_timespan_id`  int    unsigned NOT NULL AUTO_INCREMENT,
+  `dim_timespan_id`        	int    unsigned NOT NULL,
+  `dim_user_id`            	int    unsigned NOT NULL,
+  `dim_group_id`           	int    unsigned NOT NULL,
+  `dim_tags_id`            	int    unsigned NOT NULL,
+  `fact_storage_count`          int    unsigned NOT NULL,
+  `space_used_sum`         	bigint unsigned NOT NULL,
+  `space_used_max`         	bigint unsigned NOT NULL,
+  `space_available_sum`    	bigint unsigned NOT NULL,
+  `space_available_max`    	bigint unsigned NOT NULL,
+  `space_quota_sum`        	bigint unsigned NOT NULL,
+  `space_quota_max`        	bigint unsigned NOT NULL,
+  `inodes_used_sum`        	bigint unsigned NOT NULL,
+  `inodes_used_max`        	bigint unsigned NOT NULL,
+  `inodes_available_sum`   	bigint unsigned NOT NULL,
+  `inodes_available_max`   	bigint unsigned NOT NULL,
+  `inodes_quota_sum`       	bigint unsigned NOT NULL,
+  `inodes_quota_max`       	bigint unsigned NOT NULL,
+  PRIMARY KEY (`agg_storage_by_timespan_id`),
+  KEY (`dim_timespan_id`,`dim_user_id`,`dim_group_id`,`dim_tags_id`)
+) ENGINE=MyISAM;
 --
 -- Stored procedures
 --
@@ -605,7 +655,7 @@ BEGIN
   `dim_date_id`,
   `dim_user_id`,
   `dim_group_id`,
-     `inodes_used`,
+  `inodes_used`,
   `inodes_available`,
   `inodes_quota`,
   `space_used`,
@@ -616,17 +666,17 @@ BEGIN
     `dim_date`.`dim_date_id`,
     `dim_user`.`dim_user_id`,
     `dim_group`.`dim_group_id`,
-    `storage_event`.`wallt`,
-    `storage_event`.`cput`,
-    `storage_event`.`mem`,
-    `storage_event`.`vmem`,
-    `storage_event`.`wait`,
-    `storage_event`.`exect`,
-    `storage_event`.`nodes`,
-    `storage_event`.`cpus`
-  FROM `event`
+    `dim_tags`.`dim_tags_id`,
+    `storage_event`.`inodes_used`,
+    `storage_event`.`inodes_available`,
+    `storage_event`.`inodes_quota`,
+    `storage_event`.`space_used`,
+    `storage_event`.`space_available`,
+    `storage_event`.`space_quota`
+  FROM `storage_event`
   JOIN `dim_date`    ON `event`.`date_key` = `dim_date`.`date`
   JOIN `dim_user`    ON `event`.`user`     = `dim_user`.`name`
+  JOIN `dim_tags`    ON `event`.`tags`     = `dim_tags`.`tags`
   JOIN `dim_group`   ON `event`.`group`    = `dim_group`.`name`;
 END//
 
@@ -775,5 +825,125 @@ BEGIN
     `fact_job`.`dim_tags_id`,
     `fact_job`.`dim_cpus_id`;
 END//
+
+
+
+DROP PROCEDURE IF EXISTS UpdateStorageAggregates//
+CREATE PROCEDURE UpdateStorageAggregates()
+BEGIN
+  CALL UpdateStorageAggregateByAll();
+  CALL UpdateStorageAggregateByTimespan();
+END//
+
+DROP PROCEDURE IF EXISTS UpdateStorageAggregateByAll//
+CREATE PROCEDURE UpdateStorageAggregateByAll()
+BEGIN
+  TRUNCATE `agg_storage_by_all`;
+
+  INSERT INTO `agg_storage_by_all` (
+    `dim_date_id`,
+    `dim_user_id`,
+    `dim_group_id`,
+    `dim_tags_id`,
+    `fact_storage_count`,
+    `space_used_sum`,
+    `space_used_max`,
+    `space_available_sum`,
+    `space_available_max`,
+    `space_quota_sum`,
+    `space_quota_max`,
+    `inodes_used_sum`,
+    `inodes_used_max`,
+    `inodes_available_sum`,
+    `inodes_available_max`,
+    `inodes_quota_sum`,
+    `inodes_quota_max` 
+  )
+  SELECT
+    `fact_storage`.`dim_date_id`,
+    `fact_storage`.`dim_user_id`,
+    `fact_storage`.`dim_group_id`,
+    `fact_storage`.`dim_tags_id`,
+    COUNT(*),
+    SUM(`space_used`),
+    MAX(`space_used`),
+    SUM(`space_available`),
+    MAX(`space_available`),
+    SUM(`space_quota`),
+    MAX(`space_quota`),
+    SUM(`inodes_used`),
+    MAX(`inodes_used`),
+    SUM(`inodes_available`),
+    MAX(`inodes_available`),
+    SUM(`inodes_quota`),
+    MAX(`inodes_quota`)
+  FROM `fact_storage`
+  GROUP BY
+    `fact_storage`.`dim_date_id`,
+    `fact_storage`.`dim_user_id`,
+    `fact_storage`.`dim_group_id`,
+    `fact_storage`.`dim_tags_id`;
+END//
+
+DROP PROCEDURE IF EXISTS UpdateStorageAggregateByTimespan//
+CREATE PROCEDURE UpdateStorageAggregateByTimespan()
+BEGIN
+  TRUNCATE `agg_storage_by_timespan`;
+
+  INSERT INTO `agg_storage_by_timespan` (
+    `dim_timespan_id`,
+    `dim_user_id`,
+    `dim_group_id`,
+    `dim_tags_id`,
+    `fact_storage_count`,
+    `space_used_sum`,
+    `space_used_max`,
+    `space_available_sum`,
+    `space_available_max`,
+    `space_quota_sum`,
+    `space_quota_max`,
+    `inodes_used_sum`,
+    `inodes_used_max`,
+    `inodes_available_sum`,
+    `inodes_available_max`,
+    `inodes_quota_sum`,
+    `inodes_quota_max`
+  )
+  SELECT
+    `dim_timespan`.`dim_timespan_id`,
+    `fact_storage`.`dim_user_id`,
+    `fact_storage`.`dim_group_id`,
+    `fact_storage`.`dim_tags_id`,
+    COUNT(*),
+    SUM(`space_used`),
+    MAX(`space_used`),
+    SUM(`space_available`),
+    MAX(`space_available`),
+    SUM(`space_quota`),
+    MAX(`space_quota`),
+    SUM(`inodes_used`),
+    MAX(`inodes_used`),
+    SUM(`inodes_available`),
+    MAX(`inodes_available`),
+    SUM(`inodes_quota`),
+    MAX(`inodes_quota`)
+  FROM `fact_storage`
+  JOIN `dim_date` ON `fact_storage`.`dim_date_id` = `dim_date`.`dim_date_id`
+  JOIN `dim_timespan` ON
+        `dim_date`.`month`         = `dim_timespan`.`month`
+    AND `dim_date`.`year`          = `dim_timespan`.`year`
+    AND `dim_date`.`last_7_days`   = `dim_timespan`.`last_7_days`
+    AND `dim_date`.`last_30_days`  = `dim_timespan`.`last_30_days`
+    AND `dim_date`.`last_90_days`  = `dim_timespan`.`last_90_days`
+    AND `dim_date`.`last_365_days` = `dim_timespan`.`last_365_days`
+  GROUP BY
+    `dim_timespan`.`dim_timespan_id`,
+    `fact_storage`.`dim_user_id`,
+    `fact_storage`.`dim_group_id`,
+    `fact_storage`.`dim_tags_id`;
+END//
+
+
+
 
 DELIMITER ;
