@@ -674,10 +674,10 @@ BEGIN
     `storage_event`.`space_available`,
     `storage_event`.`space_quota`
   FROM `storage_event`
-  JOIN `dim_date`    ON `event`.`date_key` = `dim_date`.`date`
-  JOIN `dim_user`    ON `event`.`user`     = `dim_user`.`name`
-  JOIN `dim_tags`    ON `event`.`tags`     = `dim_tags`.`tags`
-  JOIN `dim_group`   ON `event`.`group`    = `dim_group`.`name`;
+  JOIN `dim_date`    ON `storage_event`.`date_key` = `dim_date`.`date`
+  JOIN `dim_user`    ON `storage_event`.`user`     = `dim_user`.`name`
+  JOIN `dim_tags`    ON `storage_event`.`tags`     = `dim_tags`.`tags`
+  JOIN `dim_group`   ON `storage_event`.`group`    = `dim_group`.`name`;
 END//
 
 
