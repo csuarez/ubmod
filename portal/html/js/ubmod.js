@@ -93,6 +93,26 @@ Ext.Loader.onReady(function () {
         ]
     });
 
+//--------------------------------------------------------------------------------------------------
+    /**
+     * User Storage model.
+     */
+    Ext.define('Ubmod.model.UserStorage', {
+        extend: 'Ext.data.Model',
+        fields: [
+            'user_id',
+            'name',
+            'display_name',
+            'storages' ,
+            'avg_space_used',
+            'avg_space_available',
+            'avg_space_quota' ,
+            'avg_inodes_used',
+            'avg_inodes_available'  ,
+            'avg_inodes_quota'          
+        ]
+    });
+//--------------------------------------------------------------------------------------------------
     /**
      * User tags model.
      */
@@ -320,7 +340,7 @@ Ext.Loader.onReady(function () {
                 this.set('endDate',   end);
 
                 // These events are only fired for non-custom date
-                // ranges because the parameters for custom date ranges
+                // ranges beacuse the parameters for custom date ranges
                 // aren't considered changed until new dates have been
                 // set.
                 this.fireEvent('restparamschanged');
@@ -496,6 +516,22 @@ Ext.Loader.onReady(function () {
             extraParams: { model: 'user' }
         }
     });
+    //----------------------------------------------------------------
+        Ext.define('Ubmod.store.UserStorage', {
+        extend: 'Ext.data.Store',
+        model: 'Ubmod.model.UserStorage',
+        remoteSort: true,
+        pageSize: 25,
+        sorters: [{ property: 'name', direction: 'DESC' }],
+        proxy: {
+            type: 'ajax',
+            simpleSortMode: true,
+            url: Ubmod.baseUrl + '/api/rest/jsonstore/storage/activity',
+            reader: { type: 'json', root: 'results' },
+            extraParams: { model: 'user' }
+        }
+    });
+    //------------------------------------------------------------------
 
     /**
      * User tag data store.
@@ -1081,7 +1117,300 @@ Ext.Loader.onReady(function () {
             this.callParent(arguments);
         }
     });
+//--------------------------------------------------------------------------------------------------
+   /**
+     * Tab panel for stats grid and detail pages.
+     */
+ Ext.define('Ubmod.widget.StoragePanel', {
+        extend: 'Ext.tab.Panel',
 
+        constructor: function (config) {
+            config = config || {};
+
+       
+            this.model = config.model;
+            this.store = config.store;
+            this.recordFormat = config.recordFormat;
+            this.detailTabs = {};
+
+            this.grid = Ext.create('Ubmod.widget.StorageGrid', {
+                forceFit: true,
+                title: config.gridTitle,
+                store: this.store,
+                label: this.recordFormat.label,
+                labelKey: this.recordFormat.key,
+                downloadUrl: config.downloadUrl
+            });
+
+            Ext.apply(config, {
+                activeTab: 0,
+                plain: true,
+                width: 745,
+                height: 400,
+                resizable: {
+                    constrainTo: Ext.getBody(),
+                    pinned: true,
+                    handles: 's'
+                },
+                padding: '0 0 6 0',
+                items: this.grid
+            });
+
+            this.callParent([config]);
+        },
+
+        initComponent: function () {
+            var listener = function () { this.reload(); };
+            this.model.on('restparamschanged', listener, this);
+            this.on('beforedestroy', function () {
+                this.model.removeListener(
+                    'restparamschanged',
+                    listener,
+                    this
+                );
+                this.removeAll();
+            }, this);
+
+            this.callParent(arguments);
+
+            this.grid.on('itemdblclick', function (grid, record) {
+                var id, params, tab;
+
+                id = record.get(this.recordFormat.id);
+
+                if (this.detailTabs[id] !== undefined) {
+                    this.setActiveTab(this.detailTabs[id]);
+                    return;
+                }
+
+                params = {};
+                params[this.recordFormat.id] = id;
+                params = Ext.merge(params, this.model.getRestParams());
+
+                tab = this.add({
+                    title: record.get(this.recordFormat.key),
+                    closable: true,
+                    autoScroll: true,
+                    loader: {
+                        url: this.recordFormat.detailsUrl,
+                        autoLoad: true,
+                        params: params,
+                        scripts: true
+                    }
+                });
+
+                tab.on('beforeclose', function () {
+                    delete this.detailTabs[id];
+                }, this);
+
+                tab.show();
+
+                this.detailTabs[id] = tab;
+            }, this);
+
+            this.reload();
+        },
+
+        /**
+         * Reloads all tabs.
+         */
+        reload: function () {
+            if (!this.model.isReady()) { return; }
+
+            var params = this.model.getRestParams();
+            Ext.merge(this.store.proxy.extraParams, params);
+            this.store.load();
+
+            Ext.Object.each(this.detailTabs, function (id, tab) {
+                var detailParams = {};
+                detailParams[this.recordFormat.id] = id;
+                detailParams = Ext.merge(detailParams, params);
+                tab.loader.load({
+                    url: this.detailsUrl,
+                    params: detailParams
+                });
+            }, this);
+        }
+    });
+
+
+
+    /**
+     * Storage grid.
+     */
+    Ext.define('Ubmod.widget.StorageGrid', {
+        extend: 'Ext.grid.Panel',
+
+        constructor: function (config) {
+            config = config || {};
+
+            this.label       = config.label;
+            this.labelKey    = config.labelKey;
+            this.downloadUrl = config.downloadUrl;
+
+            this.callParent([config]);
+        },
+
+        initComponent: function () {
+            var dockedItems = [],
+                downloadButton,
+                downloadFn,
+                urlTemplate;
+
+            // XXX possibleSortStates is not documented, but is used by
+            // Ext.grid.column.Column to determine what direction is
+            // used for sorting when a column header is clicked.
+            // Putting "DESC" first in the list results in the column
+            // being ordered in the descending direction on the first
+            // click.
+            this.columns = {
+                defaults: {
+                    xtype: 'numbercolumn',
+                    format: '0,000.0',
+                    align: 'right',
+                    possibleSortStates: ['DESC', 'ASC'],
+                    menuDisabled: true
+                },
+                items: [
+                    {
+                        xtype: 'gridcolumn',
+                        header: this.label,
+                        dataIndex: this.labelKey,
+                        possibleSortStates: ['ASC', 'DESC'],
+                        align: 'left',
+                        width: 128
+                    },
+                     {
+                        header: '# Storage',
+                        dataIndex: 'storages',
+                        format: '0,000',
+                        width: 96
+                    },
+                    {
+                        header: 'Space Used',
+                        dataIndex: 'avg_space_used',
+                        format: '0,000',
+                        width: 96
+                    },
+                    {
+                        header: 'Space Available',
+                        dataIndex: 'avg_space_available',
+                        format: '0,000',
+                        width: 96
+                    },
+
+                    {
+                        header: 'Space Quota',
+                        dataIndex: 'avg_space_quota',
+                        format: '0,000',
+                        width: 96
+                    },
+                    {
+                        header: 'Inodes Used',
+                        dataIndex: 'avg_inodes_used',
+                        format: '0,000',
+                        width: 96
+                    },
+                    {
+                        header: 'Inodes Available',
+                        dataIndex: 'avg_inodes_available',
+                        format: '0,000',
+                        width: 96
+                    },
+
+                    {
+                        header: 'Inodes Quota',
+                        dataIndex: 'avg_inodes_quota',
+                        format: '0,000',
+                        width: 96
+                    }
+                    
+                ]
+            };
+
+            // If a download URL is supplied add a toolbar with a
+            // download button.
+            if (this.downloadUrl) {
+                urlTemplate = new Ext.XTemplate(this.downloadUrl);
+
+                downloadFn = function (format) {
+                    var url = urlTemplate.apply({ format: format }),
+                        params = this.store.proxy.extraParams,
+                        querySegments = [],
+                        gridState = this.getState();
+
+                    if (gridState.sort !== undefined) {
+                        params.sort = gridState.sort.property;
+                        params.dir  = gridState.sort.direction;
+                    }
+
+                    Ext.Object.each(params, function (key, value) {
+                        if (value !== null) {
+                            var encodedValue = encodeURIComponent(value);
+                            querySegments.push(key + '=' + encodedValue);
+                        }
+                    });
+
+                    window.location = url + '?' + querySegments.join('&');
+                };
+
+                downloadButton = Ext.create('Ext.Button', {
+                    text: 'Export Data',
+                    menu: [
+                        {
+                            text: 'CSV - Comma Separated Values',
+                            listeners: {
+                                click: {
+                                    scope: this,
+                                    fn: function () {
+                                        downloadFn.call(this, 'csv');
+                                    }
+                                }
+                            }
+                        },
+                        {
+                            text: 'TSV - Tab Separated Values',
+                            listeners: {
+                                click: {
+                                    scope: this,
+                                    fn: function () {
+                                        downloadFn.call(this, 'tsv');
+                                    }
+                                }
+                            }
+                        },
+                        {
+                            text: 'XLS - Microsoft Excel',
+                            listeners: {
+                                click: {
+                                    scope: this,
+                                    fn: function () {
+                                        downloadFn.call(this, 'xls');
+                                    }
+                                }
+                            }
+                        }
+                    ]
+                });
+
+                dockedItems.push(Ext.create('Ext.toolbar.Toolbar', {
+                    dock: 'top',
+                    items: ['->', downloadButton]
+                }));
+            }
+
+            dockedItems.push(Ext.create('Ubmod.widget.PagingToolbar', {
+                dock: 'bottom',
+                store: this.store,
+                displayInfo: true
+            }));
+
+            this.dockedItems = dockedItems;
+
+            this.callParent(arguments);
+        }
+    });
+//--------------------------------------------------------------------------------------------------
     /**
      * Panel for various tag views.
      */
@@ -2331,7 +2660,29 @@ Ext.Loader.onReady(function () {
 
                 return panel;
             },
+//_____________________________________________________________
+//-------------------------------------------------------------
+    /**
+             * Creates a storage panel that should be updated whenever the
+             * app model is changed.
+             *
+             * @param {Object} config Constructor arguments.
+             *
+             * @return {Ubmod.widget.StoragePanel}
+             */
+            createStoragePanel: function (config) {
+                var panel;
 
+                config.model = model;
+                panel = Ext.create('Ubmod.widget.StoragePanel', config);
+                widgets.push(panel);
+
+                return panel;
+            },
+
+
+//_____________________________________________________________
+//-------------------------------------------------------------
             /**
              * Creates a tag management panel.
              *

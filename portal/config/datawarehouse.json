@@ -86,6 +86,24 @@
         "dim_tags",
         "dim_cpus"
       ]
+    },
+    {
+      "name": "fact_storage",
+      "facts": [
+        "space_used",
+        "space_available",
+        "space_quota",
+        "inodes_used",
+        "inodes_available",
+        "inodes_quota"
+
+      ],
+      "dimensions": [
+        "dim_date",
+        "dim_user",
+        "dim_tags",
+        "dim_group"
+      ]
     }
   ],
   "aggregates": [
@@ -132,6 +150,43 @@
         { "base": "exect", "type": "sum" },
         { "base": "nodes", "type": [ "sum", "max" ] },
         { "base": "cpus",  "type": [ "sum", "max" ] }
+      ]
+    },
+
+    {
+      "name": "agg_storage_by_all",
+      "base": "fact_storage",
+      "dimensions": [
+        "dim_date",
+        "dim_user",
+        "dim_group",
+        "dim_tags"
+      ],
+      "facts": [
+        { "base": "space_used", "type": [ "sum", "max" ] },
+        { "base": "space_available",  "type": [ "sum", "max" ] },
+        { "base": "space_quota",   "type": [ "sum", "max" ] },
+        { "base": "inodes_used",  "type": [ "sum", "max" ] },
+        { "base": "inodes_available","type": [ "sum", "max" ] },
+        { "base": "inodes_quota", "type": [ "sum", "max" ] }
+       
+      ]
+    }, {
+      "name": "agg_storage_by_timespan",
+      "base": "fact_storage",
+      "dimensions": [
+        "dim_timespan",
+        "dim_user",
+        "dim_group",
+        "dim_tags"
+      ],
+      "facts": [
+        { "base": "space_used", "type": [ "sum", "max" ] },
+        { "base": "space_available",  "type": [ "sum", "max" ] },
+        { "base": "space_quota",   "type": [ "sum", "max" ] },
+        { "base": "inodes_used",  "type": [ "sum", "max" ] },
+        { "base": "inodes_available", "type": [ "sum", "max" ] },
+        { "base": "inodes_quota", "type": [ "sum", "max" ] }
       ]
     }
   ]

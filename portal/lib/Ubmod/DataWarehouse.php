@@ -116,6 +116,15 @@ class Ubmod_DataWarehouse
    */
   private $_aggregates = array();
 
+    /**--------------------------------------------------------------------  
+  /**
+   * All aggregates known to the data warehouse.
+   *
+   * @var array
+   */
+  private $_base = string;
+
+    /**-------------------------------------------------------------------- 
   /**
    * Factory method.
    *
@@ -269,6 +278,7 @@ class Ubmod_DataWarehouse
       }
 
       $fact       = $this->findFact($data['tables']);
+      $this->_base = $fact->getName();
       $dimensions = $this->findDimensions($data['tables']);
 
       $nonKeyColumns = array();
@@ -466,11 +476,10 @@ class Ubmod_DataWarehouse
   private function findAggregateWith($dimensions)
   {
     foreach ($this->_aggregates as $aggregate) {
-      if ($aggregate->hasDimensions($dimensions)) {
-        return $aggregate;
+      if (($aggregate->hasDimensions($dimensions))and($this->_base == $aggregate->getBaseName())) {
+          return $aggregate;
+        }
       }
-    }
-
     return null;
   }
 
