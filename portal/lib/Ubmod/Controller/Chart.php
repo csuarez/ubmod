@@ -66,6 +66,12 @@ class Ubmod_Controller_Chart extends Ubmod_BaseController
     case 'monthly':
       Ubmod_Model_Chart::renderStackedAreaChart($chart['data']);
       break;
+    case 'storageStackedArea':
+      Ubmod_Model_Chart::renderStackedAreaChart($chart['data']);
+      break;
+        case 'inodesStackedArea':
+      Ubmod_Model_Chart::renderStackedAreaChart($chart['data']);
+      break;
     default:
       throw new Exception("Unknown chart type '{$chart['type']}'");
       break;

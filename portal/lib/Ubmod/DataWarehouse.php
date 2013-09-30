@@ -122,7 +122,7 @@ class Ubmod_DataWarehouse
    *
    * @var array
    */
-  private $_base = string;
+  private $_base;
 
     /**-------------------------------------------------------------------- 
   /**

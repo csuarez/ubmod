@@ -777,6 +777,220 @@ class Ubmod_Model_Chart
     );
   }
 
+//----------------------------------------------------------------------------------------------------------------------------
+
+  /**
+   * Get the data for a user storage stacked area chart.
+   *
+   * @param Ubmod_Model_QueryParams $params The query parameters.
+   *
+   * @return array
+   */
+  public static function getUserStorageStackedAreaData(
+    Ubmod_Model_QueryParams $params
+  ) {
+    $params->setModel('user');
+    $params->setOrderByColumn('name');
+    $params->setOrderByDescending(true);
+
+    $maxUsers = 10;
+    $topUsers = array();
+
+    // array( user_id => array( wallt, ... ), ... )
+    $serieForUserId = array();
+
+    $users     = Ubmod_Model_Storage::getActivityList($params);
+    $userCount = count($users);
+
+    foreach ($users as $user) {
+      if ($user['name'] == '') { continue; }
+
+      // Always include the first ($maxUsers - 1) users. If the number
+      // of users is less than or equal to $maxUsers, include them all
+      // (this is the case were there is no "other" user).
+      if ($userCount <= $maxUsers || count($topUsers) < $maxUsers - 1) {
+        $topUsers[] = $user;
+        $serieForUserId[$user['user_id']] = array();
+      }
+    }
+
+    $otherUser  = 'Remaining Users';
+    $otherSerie = array();
+    $haveOther  = false;
+
+    $months = Ubmod_Model_TimeInterval::getMonths($params);
+    $monthNames = array();
+
+    foreach ($months as $monthKey => $month) {
+      $otherStorage = 0;
+      $userStorage  = array();
+
+      $time = mktime(0, 0, 0, $month['month'], 1, $month['year']);
+      $monthNames[] = date("M 'y", $time);
+
+      $monthParams = clone $params;
+      $monthParams->clearTimeInterval();
+      $monthParams->setYear($month['year']);
+      $monthParams->setMonth($month['month']);
+
+      foreach (Ubmod_Model_Storage::getActivityList($monthParams) as $user) {
+        if (isset($serieForUserId[$user['user_id']])) {
+          $userStorage[$user['user_id']] = $user['avg_space_used'];
+        } else {
+          $otherStorage += $user['avg_space_used'];
+        }
+      }
+
+      // It's possible a top user may not have any activity in a given
+      // month, so zeros must be added when that is the case.
+      foreach ($topUsers as $user) {
+        $userId = $user['user_id'];
+        $serieForUserId[$userId][]
+          = isset($userStorage[$userId]) ? $userStorage[$userId] : 0;
+      }
+
+      if ($otherStorage > 0) { $haveOther = true; }
+      $otherSerie[] = $otherStorage;
+    }
+
+    // array( name => array( wallt, ... ), ... )
+    $serieForUser = array();
+
+    foreach ($topUsers as $user) {
+      $name = self::formatName($user['name'], $user['display_name']);
+      $serieForUser[$name] = $serieForUserId[$user['user_id']];
+    }
+
+    if ($haveOther) {
+      $serieForUser[$otherUser] = $otherSerie;
+    }
+
+    return array(
+      'width'      => 700,
+      'height'     => 350,
+      'title'      => 'Monthly User Storage',
+      'subtitle'   => self::getSubtitle($params),
+      'yLabel'     => 'Avg Space Used (MB)',
+      'xLabel'     => 'Month',
+      'labels'     => $monthNames,
+      'series'     => $serieForUser,
+      'legendMode' => LEGEND_VERTICAL,
+    );
+  }
+
+
+//----------------------------------------------------------------------------------------------------------------------------
+
+  /**
+   * Get the data for a user storage stacked area chart.
+   *
+   * @param Ubmod_Model_QueryParams $params The query parameters.
+   *
+   * @return array
+   */
+  public static function getUserInodesStackedAreaData(
+    Ubmod_Model_QueryParams $params
+  ) {
+    $params->setModel('user');
+    $params->setOrderByColumn('name');
+    $params->setOrderByDescending(true);
+
+    $maxUsers = 10;
+    $topUsers = array();
+
+    // array( user_id => array( wallt, ... ), ... )
+    $serieForUserId = array();
+
+    $users     = Ubmod_Model_Storage::getActivityList($params);
+    $userCount = count($users);
+
+    foreach ($users as $user) {
+      if ($user['name'] == '') { continue; }
+
+      // Always include the first ($maxUsers - 1) users. If the number
+      // of users is less than or equal to $maxUsers, include them all
+      // (this is the case were there is no "other" user).
+      if ($userCount <= $maxUsers || count($topUsers) < $maxUsers - 1) {
+        $topUsers[] = $user;
+        $serieForUserId[$user['user_id']] = array();
+      }
+    }
+
+    $otherUser  = 'Remaining Users';
+    $otherSerie = array();
+    $haveOther  = false;
+
+    $months = Ubmod_Model_TimeInterval::getMonths($params);
+    $monthNames = array();
+
+    foreach ($months as $monthKey => $month) {
+      $otherStorage = 0;
+      $userStorage  = array();
+
+      $time = mktime(0, 0, 0, $month['month'], 1, $month['year']);
+      $monthNames[] = date("M 'y", $time);
+
+      $monthParams = clone $params;
+      $monthParams->clearTimeInterval();
+      $monthParams->setYear($month['year']);
+      $monthParams->setMonth($month['month']);
+
+      foreach (Ubmod_Model_Storage::getActivityList($monthParams) as $user) {
+        if (isset($serieForUserId[$user['user_id']])) {
+          $userStorage[$user['user_id']] = $user['avg_inodes_used'];
+        } else {
+          $otherStorage += $user['avg_inodes_used'];
+        }
+      }
+
+      // It's possible a top user may not have any activity in a given
+      // month, so zeros must be added when that is the case.
+      foreach ($topUsers as $user) {
+        $userId = $user['user_id'];
+        $serieForUserId[$userId][]
+          = isset($userStorage[$userId]) ? $userStorage[$userId] : 0;
+      }
+
+      if ($otherStorage > 0) { $haveOther = true; }
+      $otherSerie[] = $otherStorage;
+    }
+
+    // array( name => array( wallt, ... ), ... )
+    $serieForUser = array();
+
+    foreach ($topUsers as $user) {
+      $name = self::formatName($user['name'], $user['display_name']);
+      $serieForUser[$name] = $serieForUserId[$user['user_id']];
+    }
+
+    if ($haveOther) {
+      $serieForUser[$otherUser] = $otherSerie;
+    }
+
+    return array(
+      'width'      => 700,
+      'height'     => 350,
+      'title'      => 'Monthly User Inodes',
+      'subtitle'   => self::getSubtitle($params),
+      'yLabel'     => 'Avg Inodes Used',
+      'xLabel'     => 'Month',
+      'labels'     => $monthNames,
+      'series'     => $serieForUser,
+      'legendMode' => LEGEND_VERTICAL,
+    );
+  }
+
+
+
+
+
+
+//----------------------------------------------------------------------------------------------------------------------------
+
+
+
+//----------------------------------------------------------------------------------------------------------------------------
+
   /**
    * Get the data for a group utilization stacked area chart.
    *
