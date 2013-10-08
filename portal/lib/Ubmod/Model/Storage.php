@@ -26,9 +26,9 @@
 /**
  * Storage model.
  *
- * @author Jeffrey T. Palmer <jtpalmer@ccr.buffalo.edu>
+ * @author Sara García Ortiz 
  * @version $Id$
- * @copyright Center for Computational Research, University at Buffalo, 2011
+ * @copyright CETA Ciemat, 2013
  * @package Ubmod
  */
 

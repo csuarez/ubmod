@@ -24,16 +24,16 @@
  */
 
 /**
- * Job REST handler.
+ * Storage REST handler.
  *
- * @author Jeffrey T. Palmer <jtpalmer@ccr.buffalo.edu>
+ * @author Sara García Ortiz 
  * @version $Id$
- * @copyright Center for Computational Research, University at Buffalo, 2012
+ * @copyright CETA Ciemat, 2013
  * @package Ubmod
  */
 
 /**
- * Job REST Handler.
+ * Storage REST Handler.
  *
  * @package Ubmod
  */
