@@ -796,7 +796,7 @@ class Ubmod_Model_Chart
     $maxUsers = 10;
     $topUsers = array();
 
-    // array( user_id => array( wallt, ... ), ... )
+    // array( user_id => array( name, avg_space_used, ... ), ... )
     $serieForUserId = array();
 
     $users     = Ubmod_Model_Storage::getActivityList($params);
@@ -853,7 +853,7 @@ class Ubmod_Model_Chart
       $otherSerie[] = $otherStorage;
     }
 
-    // array( name => array( wallt, ... ), ... )
+    // array( user_id => array( name, avg_space_used, ... ), ... )
     $serieForUser = array();
 
     foreach ($topUsers as $user) {
@@ -882,7 +882,7 @@ class Ubmod_Model_Chart
 //----------------------------------------------------------------------------------------------------------------------------
 
   /**
-   * Get the data for a user storage stacked area chart.
+   * Get the data for a user inodes stacked area chart.
    *
    * @param Ubmod_Model_QueryParams $params The query parameters.
    *
@@ -898,7 +898,7 @@ class Ubmod_Model_Chart
     $maxUsers = 10;
     $topUsers = array();
 
-    // array( user_id => array( wallt, ... ), ... )
+   // array( user_id => array( name, avg_inodes_used, ... ), ... )
     $serieForUserId = array();
 
     $users     = Ubmod_Model_Storage::getActivityList($params);
@@ -955,7 +955,7 @@ class Ubmod_Model_Chart
       $otherSerie[] = $otherStorage;
     }
 
-    // array( name => array( wallt, ... ), ... )
+    // array( user_id => array( name, avg_inodes_used, ... ), ... )
     $serieForUser = array();
 
     foreach ($topUsers as $user) {
@@ -979,13 +979,6 @@ class Ubmod_Model_Chart
       'legendMode' => LEGEND_VERTICAL,
     );
   }
-
-
-
-
-
-
-//----------------------------------------------------------------------------------------------------------------------------
 
 
 

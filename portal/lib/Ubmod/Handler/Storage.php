@@ -48,13 +48,13 @@ class Ubmod_Handler_Storage extends Ubmod_BaseHandler
   public function activityHelp()
   {
     $desc = 'Returns user activity. Results will be an array where individual'
-      . ' records will consist of (user_id, user, display_name, jobs, cput,'
-      . ' wallt, avg_wait, avg_cpus, avg_mem).';
+      . ' records will consist of (user_id, user, display_name, avg_space_used, avg_space_available,'
+      . ' avg_space_quota, avg_inodes_used, avg_inodes_available, avg_inodes_quota).';
     $options = array(
       'interval_id' => 'Return user activity in this interval. (required)',
       'filter'      => 'Filter criteria.  Substring match against user field.',
-      'sort'        => 'Sort field.  Valid options: user, jobs, avg_cpus,'
-                     . ' avg_wait, wallt, avg_mem',
+      'sort'        => 'Sort field.  Valid options: user, avg_space_used, avg_space_available,'
+      . ' avg_space_quota, avg_inodes_used, avg_inodes_available, avg_inodes_quota',
       'dir'         => 'Sort direction.  Valid options: ASC, DESC',
       'start'       => 'Limit offset. (requires limit)',
       'limit'       => 'Maximum number of entities to return. (requires start)',

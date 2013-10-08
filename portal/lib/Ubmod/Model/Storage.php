@@ -24,7 +24,7 @@
  */
 
 /**
- * Job model.
+ * Storage model.
  *
  * @author Jeffrey T. Palmer <jtpalmer@ccr.buffalo.edu>
  * @version $Id$
@@ -33,7 +33,7 @@
  */
 
 /**
- * Job Model.
+ * Storage Model.
  *
  * @package Ubmod
  */
@@ -68,7 +68,7 @@ class Ubmod_Model_Storage
   }
 
   /**
-   * Returns job activity.
+   * Returns storage activity.
    *
    * @param Ubmod_Model_QueryParams $params The parameters for the query.
    *
@@ -181,6 +181,7 @@ class Ubmod_Model_Storage
         'inodes_quota'          => 'Inodes Quota (inodes)',
       );
       break;
+      //ToDo: case 'group', case 'proyect' 
     case 'group':
       return array(
         'name'                  => 'Group',

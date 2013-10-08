@@ -55,7 +55,7 @@
       <?php endif; ?>
     </div>
   <?php else: ?>
-    No job data found for user in given time period.
+    No storage data found for user in given time period.
   <?php endif; ?>
 </div>
 

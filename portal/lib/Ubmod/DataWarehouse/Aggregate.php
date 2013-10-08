@@ -41,7 +41,7 @@ class Ubmod_DataWarehouse_Aggregate extends Ubmod_DataWarehouse_Fact
 {
 
   /**
-   * Name of the base fact table.
+   * Name of the base fact table selected.
    *
    * @var string
    */
@@ -65,6 +65,7 @@ class Ubmod_DataWarehouse_Aggregate extends Ubmod_DataWarehouse_Fact
 
   /**
    * Constructor.
+   * Support Storage dataWarehouse.
    *
    * @param array $config Configuration data.
    *
@@ -84,7 +85,7 @@ class Ubmod_DataWarehouse_Aggregate extends Ubmod_DataWarehouse_Fact
           $this->addAggregate($fact['base'], $type);
         }
       } else {
-        $this->addAggregate($fact['base'], $fact['type']);
+          $this->addAggregate($fact['base'], $fact['type']);
       }
     }
 

@@ -42,7 +42,7 @@ class Ubmod_Controller_Chart extends Ubmod_BaseController
 
   /**
    * Execute the "cached" chart action.
-   *
+   * Support storage charts.
    * @return void
    */
   public function executeCached()
@@ -64,12 +64,8 @@ class Ubmod_Controller_Chart extends Ubmod_BaseController
       break;
     case 'stackedArea':
     case 'monthly':
-      Ubmod_Model_Chart::renderStackedAreaChart($chart['data']);
-      break;
     case 'storageStackedArea':
-      Ubmod_Model_Chart::renderStackedAreaChart($chart['data']);
-      break;
-        case 'inodesStackedArea':
+    case 'inodesStackedArea':
       Ubmod_Model_Chart::renderStackedAreaChart($chart['data']);
       break;
     default:
@@ -80,7 +76,7 @@ class Ubmod_Controller_Chart extends Ubmod_BaseController
 
   /**
    * Execute the "imageMap" chart action.
-   *
+   * Support storage charts.
    * @return void
    */
   public function executeImageMap()
@@ -102,6 +98,8 @@ class Ubmod_Controller_Chart extends Ubmod_BaseController
       break;
     case 'stackedArea':
     case 'monthly':
+    case 'storageStackedArea':
+    case 'inodesStackedArea':
       throw new Exception("Unsupported chart type '{$chart['type']}'");
       break;
     default:

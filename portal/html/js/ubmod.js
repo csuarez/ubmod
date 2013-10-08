@@ -103,12 +103,12 @@ Ext.Loader.onReady(function () {
             'user_id',
             'name',
             'display_name',
-            'storages' ,
+            'storages',
             'avg_space_used',
             'avg_space_available',
-            'avg_space_quota' ,
+            'avg_space_quota',
             'avg_inodes_used',
-            'avg_inodes_available'  ,
+            'avg_inodes_available',
             'avg_inodes_quota'          
         ]
     });
@@ -517,7 +517,7 @@ Ext.Loader.onReady(function () {
         }
     });
     //----------------------------------------------------------------
-        Ext.define('Ubmod.store.UserStorage', {
+    Ext.define('Ubmod.store.UserStorage', {
         extend: 'Ext.data.Store',
         model: 'Ubmod.model.UserStorage',
         remoteSort: true,
@@ -1119,7 +1119,7 @@ Ext.Loader.onReady(function () {
     });
 //--------------------------------------------------------------------------------------------------
    /**
-     * Tab panel for stats grid and detail pages.
+     * Tab panel for storage grid and detail pages.
      */
  Ext.define('Ubmod.widget.StoragePanel', {
         extend: 'Ext.tab.Panel',
@@ -1280,27 +1280,22 @@ Ext.Loader.onReady(function () {
                         align: 'left',
                         width: 128
                     },
-                     {
-                        header: '# Storage',
-                        dataIndex: 'storages',
-                        format: '0,000',
-                        width: 96
-                    },
+                     
                     {
-                        header: 'Space Used',
+                        header: 'Space Used (MB)',
                         dataIndex: 'avg_space_used',
                         format: '0,000',
                         width: 96
                     },
                     {
-                        header: 'Space Available',
+                        header: 'Space Available(MB)',
                         dataIndex: 'avg_space_available',
                         format: '0,000',
-                        width: 96
+                        width: 107
                     },
 
                     {
-                        header: 'Space Quota',
+                        header: 'Space Quota(MB)',
                         dataIndex: 'avg_space_quota',
                         format: '0,000',
                         width: 96
@@ -2660,8 +2655,7 @@ Ext.Loader.onReady(function () {
 
                 return panel;
             },
-//_____________________________________________________________
-//-------------------------------------------------------------
+//--------------------------------------------------------------------------------------------------
     /**
              * Creates a storage panel that should be updated whenever the
              * app model is changed.
@@ -2680,9 +2674,7 @@ Ext.Loader.onReady(function () {
                 return panel;
             },
 
-
-//_____________________________________________________________
-//-------------------------------------------------------------
+//--------------------------------------------------------------------------------------------------
             /**
              * Creates a tag management panel.
              *
@@ -2746,6 +2738,7 @@ Ext.Loader.onReady(function () {
 
             /**
              * Load a chart.
+             * Support Storage charts.
              *
              * @param {String} id The img tag id.
              * @param {String} model The data model identifier.
@@ -2763,7 +2756,8 @@ Ext.Loader.onReady(function () {
                     success: function (response) {
                         var retval = Ext.JSON.decode(response.responseText);
                         Ext.select('#' + id).set({ src: retval.img_url });
-                        if (type !== 'stackedArea' && type !== 'monthly') {
+                        if (type !== 'stackedArea' && type !== 'monthly' 
+                            && type !== 'storageStackedArea' && type !== 'inodesStackedArea') {
                             Ext.defer(
                                 this.loadChartMap,
                                 200,

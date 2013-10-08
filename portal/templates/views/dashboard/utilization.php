@@ -36,9 +36,9 @@ Ext.onReady(function () {
             params);
         Ubmod.app.loadChart('group-stacked-area', 'group', 'stackedArea',
             params);
-         Ubmod.app.loadChart('user-storage-stacked-area', 'user', 'storageStackedArea',
+        Ubmod.app.loadChart('user-storage-stacked-area', 'user', 'storageStackedArea',
             params);
-              Ubmod.app.loadChart('user-inodes-stacked-area', 'user', 'inodesStackedArea',
+        Ubmod.app.loadChart('user-inodes-stacked-area', 'user', 'inodesStackedArea',
             params);
     <?php endif; ?>
 });
@@ -84,12 +84,7 @@ Ext.onReady(function () {
       <td colspan="2" style="font-size:x-small;">Plot format:
         <a id="swap-link" class="editLink" href="#">Bar</a></td>
     </tr>
-       <tr>
-        <td style="vertical-align:top;"><img id="user-storage-stacked-area" src="<?php echo $BASE_URL ?>/images/loading.gif" /></td>
-      </tr>
-        <tr>
-        <td style="vertical-align:top;"><img id="user-inodes-stacked-area" src="<?php echo $BASE_URL ?>/images/loading.gif" /></td>
-      </tr>
+      
     <tr>
       <td style="vertical-align:top;"><img id="user-pie" class="pie" src="<?php echo $BASE_URL ?>/images/loading.gif" /><img id="user-bar" class="bar" style="display:none;" src="<?php echo $BASE_URL ?>/images/loading.gif" /></td>
     </tr>
@@ -97,6 +92,12 @@ Ext.onReady(function () {
       <td style="vertical-align:top;"><img id="group-pie" class="pie" src="<?php echo $BASE_URL ?>/images/loading.gif" /><img id="group-bar" class="bar" style="display:none;" src="<?php echo $BASE_URL ?>/images/loading.gif" /></td>
     </tr>
     <?php if ($interval['multi_month']): ?>
+     <tr>
+        <td style="vertical-align:top;"><img id="user-storage-stacked-area" src="<?php echo $BASE_URL ?>/images/loading.gif" /></td>
+      </tr>
+        <tr>
+        <td style="vertical-align:top;"><img id="user-inodes-stacked-area" src="<?php echo $BASE_URL ?>/images/loading.gif" /></td>
+      </tr>
       <tr>
         <td style="vertical-align:top;"><img id="user-stacked-area" src="<?php echo $BASE_URL ?>/images/loading.gif" /></td>
       </tr>

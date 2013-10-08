@@ -118,11 +118,11 @@ class Ubmod_DataWarehouse
 
     /**--------------------------------------------------------------------  
   /**
-   * All aggregates known to the data warehouse.
+   *Fact selected.
    *
    * @var array
    */
-  private $_base;
+  private $_base= array();
 
     /**-------------------------------------------------------------------- 
   /**

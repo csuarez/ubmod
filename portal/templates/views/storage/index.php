@@ -14,10 +14,13 @@ Ext.onReady(function () {
     });
 });
 </script>
-<div id="stats"></div>
+<div id="stats">
+ <p> * All columns (Table) are average data.</p>
+   <br />
+</div>
 <br/>
 <div class="chart-desc">
-  This table provides detailed information (average) on users, storage used and inodes used.
+  This table provides detailed information on users, storage used and inodes used.
   Clicking once on the headings in each of the columns will sort the column (Table) from high to low.
   A second click will reverse the sort. The Search capability allows you to
   search for a particular user. Press enter in the search bar to filter.

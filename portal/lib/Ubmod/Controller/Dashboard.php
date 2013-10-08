@@ -62,6 +62,7 @@ class Ubmod_Controller_Dashboard extends Ubmod_BaseController
     $this->params   = json_encode($this->getPostData());
     $this->interval = Ubmod_Model_TimeInterval::getByParams($params);
     $this->activity = Ubmod_Model_Job::getActivity($params);
+    $this->activityStorage = Ubmod_Model_Storage::getActivity($params);
 
     if ($params->hasClusterId()) {
       $cluster = Ubmod_Model_Cluster::getById($params->getClusterId());
