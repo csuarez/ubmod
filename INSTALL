@@ -114,5 +114,9 @@ Set up the web application
 
 * Reload the Apache configuration.
 
-* Point your browser to http://localhost:8080/
+* [Only if you are installing using the source code] Uncompress the 
+  third-party dependencies executing the following command:
 
+    $ sh ./portal/assets/setup.sh
+
+* Point your browser to http://localhost:8080/
