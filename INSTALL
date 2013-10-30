@@ -52,6 +52,11 @@ Set up the MySQL database
 
     $ mysql -u ubmoduser -p ubmod < ./ddl/ubmod.sql
 
+If you are upgrading from a version of UBMoD without storage support,
+you can upgrade your database executing the following command:
+
+    $ mysql -u ubmoduser -p ubmod < ./ddl/ubmod-upgrade-to-storage-version.sql
+
 Create the UBMoD config files
 
 * Create the files portal/config/settings.ini and
